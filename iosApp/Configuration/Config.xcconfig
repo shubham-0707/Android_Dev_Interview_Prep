@@ -1,0 +1,7 @@
+TEAM_ID=
+
+PRODUCT_NAME=MobileDevInterviewPreparations
+PRODUCT_BUNDLE_IDENTIFIER=com.shubham.mobiledevinterviewprep.MobileDevInterviewPreparations$(TEAM_ID)
+
+CURRENT_PROJECT_VERSION=1
+MARKETING_VERSION=1.0
