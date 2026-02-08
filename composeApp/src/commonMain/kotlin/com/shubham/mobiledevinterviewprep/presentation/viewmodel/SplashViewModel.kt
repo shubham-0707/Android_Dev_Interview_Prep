@@ -3,6 +3,7 @@ package com.shubham.mobiledevinterviewprep.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.shubham.mobiledevinterviewprep.domain.usecase.ManageAuthUseCase
+import com.shubham.mobiledevinterviewprep.domain.usecase.ManageProgressUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,7 +16,8 @@ sealed class SplashUiState {
 }
 
 class SplashViewModel(
-    private val manageAuthUseCase: ManageAuthUseCase
+    private val manageAuthUseCase: ManageAuthUseCase,
+    private val manageProgressUseCase: ManageProgressUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<SplashUiState>(SplashUiState.Loading)
@@ -23,8 +25,15 @@ class SplashViewModel(
 
     fun checkAuth() {
         viewModelScope.launch {
-            val isLoggedIn = manageAuthUseCase.isLoggedIn().first()
-            _uiState.value = SplashUiState.Navigate(isLoggedIn)
+            val user = manageAuthUseCase.currentUser().first()
+            if (user != null) {
+                try {
+                    manageProgressUseCase.syncFromRemoteIfLoggedIn()
+                } catch (_: Exception) {
+                    // Ignore offline sync errors
+                }
+            }
+            _uiState.value = SplashUiState.Navigate(user != null)
         }
     }
 }

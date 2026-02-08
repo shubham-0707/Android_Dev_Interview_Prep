@@ -2,6 +2,7 @@ package com.shubham.mobiledevinterviewprep.domain.usecase
 
 import com.shubham.mobiledevinterviewprep.domain.repository.ProgressRepository
 import com.shubham.mobiledevinterviewprep.domain.repository.QuestionRepository
+import com.shubham.mobiledevinterviewprep.platform.PlatformProgressSync
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
@@ -11,7 +12,8 @@ import kotlinx.coroutines.flow.first
  */
 class ManageProgressUseCase(
     private val progressRepository: ProgressRepository,
-    private val questionRepository: QuestionRepository
+    private val questionRepository: QuestionRepository,
+    private val manageAuthUseCase: ManageAuthUseCase
 ) {
     /**
      * Returns covered question IDs.
@@ -23,6 +25,7 @@ class ManageProgressUseCase(
      */
     suspend fun markCovered(questionId: String) {
         progressRepository.markCovered(questionId)
+        syncToRemoteIfLoggedIn()
     }
 
     /**
@@ -30,6 +33,7 @@ class ManageProgressUseCase(
      */
     suspend fun clearProgress() {
         progressRepository.clearProgress()
+        syncToRemoteIfLoggedIn()
     }
 
     /**
@@ -45,7 +49,32 @@ class ManageProgressUseCase(
         val celebrated = progressRepository.getCelebratedTopicIds().first()
         if (topicId in celebrated) return false
         progressRepository.markTopicCelebrated(topicId)
+        syncToRemoteIfLoggedIn()
         return true
+    }
+
+    /**
+     * Syncs progress from cloud on login.
+     */
+    suspend fun syncFromRemoteIfLoggedIn() {
+        val user = manageAuthUseCase.currentUser().first() ?: return
+        try {
+            val snapshot = PlatformProgressSync.fetchProgress(user.uid) ?: return
+            progressRepository.setProgress(snapshot.coveredIds, snapshot.celebratedTopicIds)
+        } catch (_: Exception) {
+            // Ignore offline failures; keep local progress.
+        }
+    }
+
+    private suspend fun syncToRemoteIfLoggedIn() {
+        val user = manageAuthUseCase.currentUser().first() ?: return
+        val covered = progressRepository.getCoveredQuestionIds().first()
+        val celebrated = progressRepository.getCelebratedTopicIds().first()
+        try {
+            PlatformProgressSync.saveProgress(user.uid, covered, celebrated)
+        } catch (_: Exception) {
+            // Ignore offline failures; will sync next time.
+        }
     }
 
     /**

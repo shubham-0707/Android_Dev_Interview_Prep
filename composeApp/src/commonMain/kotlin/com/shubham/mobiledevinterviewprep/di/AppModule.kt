@@ -55,7 +55,7 @@ object AppModule {
     }
 
     private val authRepository: AuthRepository by lazy {
-        AuthRepositoryImpl(settings)
+        AuthRepositoryImpl()
     }
 
     private val bookmarkRepository: BookmarkRepository by lazy {
@@ -95,7 +95,11 @@ object AppModule {
     }
 
     private fun provideManageProgressUseCase(): ManageProgressUseCase {
-        return ManageProgressUseCase(progressRepository, questionRepository)
+        return ManageProgressUseCase(
+            progressRepository = progressRepository,
+            questionRepository = questionRepository,
+            manageAuthUseCase = provideManageAuthUseCase()
+        )
     }
 
     // ============================================================================
@@ -130,19 +134,22 @@ object AppModule {
 
     fun provideSplashViewModel(): SplashViewModel {
         return SplashViewModel(
-            manageAuthUseCase = provideManageAuthUseCase()
+            manageAuthUseCase = provideManageAuthUseCase(),
+            manageProgressUseCase = provideManageProgressUseCase()
         )
     }
 
     fun provideLoginViewModel(): LoginViewModel {
         return LoginViewModel(
-            manageAuthUseCase = provideManageAuthUseCase()
+            manageAuthUseCase = provideManageAuthUseCase(),
+            manageProgressUseCase = provideManageProgressUseCase()
         )
     }
 
     fun provideUserViewModel(): UserViewModel {
         return UserViewModel(
-            manageAuthUseCase = provideManageAuthUseCase()
+            manageAuthUseCase = provideManageAuthUseCase(),
+            manageProgressUseCase = provideManageProgressUseCase()
         )
     }
 

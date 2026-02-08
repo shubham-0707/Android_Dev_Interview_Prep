@@ -34,6 +34,11 @@ interface ProgressRepository {
     suspend fun clearProgress()
 
     /**
+     * Sets progress from remote sync.
+     */
+    suspend fun setProgress(coveredIds: Set<String>, celebratedTopicIds: Set<String>)
+
+    /**
      * Marks a topic as already celebrated.
      */
     suspend fun markTopicCelebrated(topicId: String)

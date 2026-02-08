@@ -1,5 +1,6 @@
 package com.shubham.mobiledevinterviewprep.domain.usecase
 
+import com.shubham.mobiledevinterviewprep.domain.model.UserProfile
 import com.shubham.mobiledevinterviewprep.domain.repository.AuthRepository
 import kotlinx.coroutines.flow.Flow
 
@@ -9,7 +10,13 @@ import kotlinx.coroutines.flow.Flow
 class ManageAuthUseCase(
     private val authRepository: AuthRepository
 ) {
-    fun isLoggedIn(): Flow<Boolean> = authRepository.isLoggedIn()
-    suspend fun login() = authRepository.setLoggedIn(true)
-    suspend fun logout() = authRepository.logout()
+    fun currentUser(): Flow<UserProfile?> = authRepository.currentUser()
+    suspend fun signInWithGoogle(): UserProfile = authRepository.signInWithGoogle()
+    suspend fun startPhoneVerification(phoneNumber: String): String =
+        authRepository.startPhoneVerification(phoneNumber)
+    suspend fun verifyPhoneCode(verificationId: String, code: String): UserProfile =
+        authRepository.verifyPhoneCode(verificationId, code)
+    suspend fun updateProfilePhoto(bytes: ByteArray): UserProfile? =
+        authRepository.updateProfilePhoto(bytes)
+    suspend fun signOut() = authRepository.signOut()
 }

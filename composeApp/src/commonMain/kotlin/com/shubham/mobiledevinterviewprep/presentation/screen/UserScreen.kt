@@ -23,12 +23,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.shubham.mobiledevinterviewprep.presentation.component.ArrowBackIcon
 import com.shubham.mobiledevinterviewprep.presentation.viewmodel.UserUiState
 import com.shubham.mobiledevinterviewprep.presentation.viewmodel.UserViewModel
+import com.shubham.mobiledevinterviewprep.platform.rememberImagePicker
+import com.shubham.mobiledevinterviewprep.platform.ProfilePhoto
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,6 +42,13 @@ fun UserScreen(
     onLoggedOut: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val localPhotoBytes = remember { mutableStateOf<ByteArray?>(null) }
+    val pickImage = rememberImagePicker { bytes ->
+        if (bytes != null) {
+            localPhotoBytes.value = bytes
+            viewModel.updatePhoto(bytes)
+        }
+    }
 
     LaunchedEffect(uiState) {
         if (uiState is UserUiState.LoggedOut) {
@@ -77,24 +88,39 @@ fun UserScreen(
                 .padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            val user = (uiState as? UserUiState.Ready)?.user
             Text(
-                text = "Interview Prep User",
+                text = user?.displayName ?: "Interview Prep User",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onBackground
             )
             Text(
-                text = "Signed in",
+                text = user?.email ?: user?.phoneNumber ?: "Signed in",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
+            ProfilePhoto(bytes = localPhotoBytes.value)
+
             Spacer(modifier = Modifier.height(12.dp))
+
+            Button(
+                onClick = { pickImage() },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(4.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+            ) {
+                Text("Add / Change Photo")
+            }
 
             Button(
                 onClick = { viewModel.logout() },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(18.dp),
+                shape = RoundedCornerShape(4.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     contentColor = MaterialTheme.colorScheme.onPrimaryContainer

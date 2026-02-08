@@ -7,9 +7,23 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinSerialization)
+    alias(libs.plugins.googleServices)
+    alias(libs.plugins.kotlinCocoapods)
 }
 
 kotlin {
+    cocoapods {
+        summary = "Interview Prep KMP"
+        homepage = "https://example.com"
+        version = "1.0.0"
+        name = "ComposeApp"
+        ios.deploymentTarget = "14.0"
+        pod("FirebaseAuth")
+        pod("FirebaseFirestore")
+        pod("FirebaseStorage")
+        pod("GoogleSignIn")
+    }
+
     androidTarget {
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_11)
@@ -30,6 +44,10 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.androidx.activity.compose)
+            implementation(libs.firebase.auth)
+            implementation(libs.firebase.firestore)
+            implementation(libs.firebase.storage)
+            implementation(libs.play.services.auth)
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)

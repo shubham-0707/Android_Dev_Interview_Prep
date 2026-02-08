@@ -63,6 +63,21 @@ class ProgressRepositoryImpl(
             saveCoveredToStorage(emptySet())
             emptySet()
         }
+        celebratedTopicIds.update {
+            saveCelebratedToStorage(emptySet())
+            emptySet()
+        }
+    }
+
+    override suspend fun setProgress(coveredIds: Set<String>, celebratedTopicIds: Set<String>) {
+        this.coveredIds.update {
+            saveCoveredToStorage(coveredIds)
+            coveredIds
+        }
+        this.celebratedTopicIds.update {
+            saveCelebratedToStorage(celebratedTopicIds)
+            celebratedTopicIds
+        }
     }
 
     override suspend fun markTopicCelebrated(topicId: String) {
