@@ -7,6 +7,7 @@ import com.shubham.mobiledevinterviewprep.domain.model.Topic
 import com.shubham.mobiledevinterviewprep.domain.usecase.GetQuestionsUseCase
 import com.shubham.mobiledevinterviewprep.domain.usecase.GetTopicUseCase
 import com.shubham.mobiledevinterviewprep.domain.usecase.ManageBookmarksUseCase
+import com.shubham.mobiledevinterviewprep.domain.usecase.ManageProgressUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -25,7 +26,8 @@ sealed class FlashcardUiState {
         val questions: List<Question>,
         val currentIndex: Int,
         val isAnswerRevealed: Boolean,
-        val bookmarkedIds: Set<String>
+        val bookmarkedIds: Set<String>,
+        val showCelebration: Boolean = false
     ) : FlashcardUiState() {
         val currentQuestion: Question? 
             get() = questions.getOrNull(currentIndex)
@@ -60,7 +62,8 @@ sealed class FlashcardUiState {
 class FlashcardViewModel(
     private val getTopicUseCase: GetTopicUseCase,
     private val getQuestionsUseCase: GetQuestionsUseCase,
-    private val manageBookmarksUseCase: ManageBookmarksUseCase
+    private val manageBookmarksUseCase: ManageBookmarksUseCase,
+    private val manageProgressUseCase: ManageProgressUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<FlashcardUiState>(FlashcardUiState.Loading)
@@ -91,7 +94,8 @@ class FlashcardViewModel(
                         questions = questions,
                         currentIndex = startAtIndex.coerceIn(0, questions.size - 1),
                         isAnswerRevealed = false,
-                        bookmarkedIds = bookmarkedIds
+                        bookmarkedIds = bookmarkedIds,
+                        showCelebration = false
                     )
                 }
             }
@@ -132,7 +136,8 @@ class FlashcardViewModel(
                         questions = questions,
                         currentIndex = targetIndex,
                         isAnswerRevealed = false,
-                        bookmarkedIds = bookmarkedIds
+                        bookmarkedIds = bookmarkedIds,
+                        showCelebration = false
                     )
                 }
             }
@@ -167,7 +172,8 @@ class FlashcardViewModel(
                         questions = questions,
                         currentIndex = startAtIndex.coerceIn(0, questions.size - 1),
                         isAnswerRevealed = false,
-                        bookmarkedIds = bookmarkedIds
+                        bookmarkedIds = bookmarkedIds,
+                        showCelebration = false
                     )
                 }
             }
@@ -224,8 +230,20 @@ class FlashcardViewModel(
      * Toggles the answer reveal state.
      */
     fun toggleAnswer() {
-        updateState { state ->
-            state.copy(isAnswerRevealed = !state.isAnswerRevealed)
+        val currentState = _uiState.value
+        if (currentState is FlashcardUiState.Success) {
+            val shouldReveal = !currentState.isAnswerRevealed
+            if (shouldReveal) {
+                currentState.currentQuestion?.let { question ->
+                    viewModelScope.launch {
+                        manageProgressUseCase.markCovered(question.id)
+                        maybeCelebrateCompletion(currentState)
+                    }
+                }
+            }
+            updateState { state ->
+                state.copy(isAnswerRevealed = shouldReveal)
+            }
         }
     }
 
@@ -233,8 +251,40 @@ class FlashcardViewModel(
      * Shows the answer.
      */
     fun revealAnswer() {
+        val currentState = _uiState.value
+        if (currentState is FlashcardUiState.Success) {
+            currentState.currentQuestion?.let { question ->
+                viewModelScope.launch {
+                    manageProgressUseCase.markCovered(question.id)
+                    maybeCelebrateCompletion(currentState)
+                }
+            }
+            updateState { state ->
+                state.copy(isAnswerRevealed = true)
+            }
+        }
+    }
+
+    /**
+     * Marks completion celebration when the last card is covered.
+     */
+    private suspend fun maybeCelebrateCompletion(state: FlashcardUiState.Success) {
+        val topicId = state.topic?.id ?: return
+        if (state.currentIndex != state.questions.lastIndex) return
+        val shouldCelebrate = manageProgressUseCase.checkAndCelebrateIfCompleted(topicId)
+        if (shouldCelebrate) {
+            updateState { current ->
+                current.copy(showCelebration = true)
+            }
+        }
+    }
+
+    /**
+     * Resets celebration flag after showing animation.
+     */
+    fun dismissCelebration() {
         updateState { state ->
-            state.copy(isAnswerRevealed = true)
+            if (state.showCelebration) state.copy(showCelebration = false) else state
         }
     }
 

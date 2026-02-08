@@ -3,11 +3,13 @@ package com.shubham.mobiledevinterviewprep.presentation.screen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -18,6 +20,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -116,6 +119,7 @@ fun TopicScreen(
                     TopicContent(
                         questions = state.questions,
                         bookmarkedIds = state.bookmarkedIds,
+                    coveredCount = state.coveredCount,
                         onQuestionClick = onQuestionClick,
                         onBookmarkClick = { viewModel.toggleBookmark(it) },
                         onStartFlashcards = onStartFlashcards,
@@ -131,6 +135,7 @@ fun TopicScreen(
 private fun TopicContent(
     questions: List<Question>,
     bookmarkedIds: Set<String>,
+    coveredCount: Int,
     onQuestionClick: (Int) -> Unit,
     onBookmarkClick: (String) -> Unit,
     onStartFlashcards: () -> Unit,
@@ -158,6 +163,31 @@ private fun TopicContent(
                 color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.padding(vertical = 8.dp)
             )
+        }
+
+        // Progress summary
+        item(key = "progress_summary") {
+            val progress = if (questions.isEmpty()) 0f else coveredCount.toFloat() / questions.size
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+            ) {
+                Text(
+                    text = "$coveredCount / ${questions.size} covered",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                LinearProgressIndicator(
+                    progress = { progress },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(6.dp),
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant
+                )
+            }
         }
 
         // Question cards

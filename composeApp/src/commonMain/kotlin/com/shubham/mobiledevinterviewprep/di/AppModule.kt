@@ -1,15 +1,24 @@
 package com.shubham.mobiledevinterviewprep.di
 
 import com.shubham.mobiledevinterviewprep.data.local.SettingsFactory
+import com.shubham.mobiledevinterviewprep.data.repository.AuthRepositoryImpl
 import com.shubham.mobiledevinterviewprep.data.repository.BookmarkRepositoryImpl
+import com.shubham.mobiledevinterviewprep.data.repository.ProgressRepositoryImpl
 import com.shubham.mobiledevinterviewprep.data.repository.QuestionRepositoryImpl
+import com.shubham.mobiledevinterviewprep.domain.repository.AuthRepository
 import com.shubham.mobiledevinterviewprep.domain.repository.BookmarkRepository
+import com.shubham.mobiledevinterviewprep.domain.repository.ProgressRepository
 import com.shubham.mobiledevinterviewprep.domain.repository.QuestionRepository
 import com.shubham.mobiledevinterviewprep.domain.usecase.GetQuestionsUseCase
 import com.shubham.mobiledevinterviewprep.domain.usecase.GetTopicUseCase
 import com.shubham.mobiledevinterviewprep.domain.usecase.GetTopicsUseCase
+import com.shubham.mobiledevinterviewprep.domain.usecase.ManageAuthUseCase
 import com.shubham.mobiledevinterviewprep.domain.usecase.ManageBookmarksUseCase
+import com.shubham.mobiledevinterviewprep.domain.usecase.ManageProgressUseCase
 import com.shubham.mobiledevinterviewprep.domain.usecase.SearchQuestionsUseCase
+import com.shubham.mobiledevinterviewprep.presentation.viewmodel.LoginViewModel
+import com.shubham.mobiledevinterviewprep.presentation.viewmodel.SplashViewModel
+import com.shubham.mobiledevinterviewprep.presentation.viewmodel.UserViewModel
 import com.shubham.mobiledevinterviewprep.presentation.viewmodel.BookmarkViewModel
 import com.shubham.mobiledevinterviewprep.presentation.viewmodel.FlashcardViewModel
 import com.shubham.mobiledevinterviewprep.presentation.viewmodel.HomeViewModel
@@ -45,8 +54,16 @@ object AppModule {
         QuestionRepositoryImpl()
     }
 
+    private val authRepository: AuthRepository by lazy {
+        AuthRepositoryImpl(settings)
+    }
+
     private val bookmarkRepository: BookmarkRepository by lazy {
         BookmarkRepositoryImpl(settings)
+    }
+
+    private val progressRepository: ProgressRepository by lazy {
+        ProgressRepositoryImpl(settings)
     }
 
     // ============================================================================
@@ -73,6 +90,14 @@ object AppModule {
         return ManageBookmarksUseCase(bookmarkRepository, questionRepository)
     }
 
+    private fun provideManageAuthUseCase(): ManageAuthUseCase {
+        return ManageAuthUseCase(authRepository)
+    }
+
+    private fun provideManageProgressUseCase(): ManageProgressUseCase {
+        return ManageProgressUseCase(progressRepository, questionRepository)
+    }
+
     // ============================================================================
     // ViewModels - Factory methods for creating new instances
     // ============================================================================
@@ -80,7 +105,8 @@ object AppModule {
     fun provideHomeViewModel(): HomeViewModel {
         return HomeViewModel(
             getTopicsUseCase = provideGetTopicsUseCase(),
-            manageBookmarksUseCase = provideManageBookmarksUseCase()
+            manageBookmarksUseCase = provideManageBookmarksUseCase(),
+            manageProgressUseCase = provideManageProgressUseCase()
         )
     }
 
@@ -88,7 +114,8 @@ object AppModule {
         return TopicViewModel(
             getTopicUseCase = provideGetTopicUseCase(),
             getQuestionsUseCase = provideGetQuestionsUseCase(),
-            manageBookmarksUseCase = provideManageBookmarksUseCase()
+            manageBookmarksUseCase = provideManageBookmarksUseCase(),
+            manageProgressUseCase = provideManageProgressUseCase()
         )
     }
 
@@ -96,7 +123,26 @@ object AppModule {
         return FlashcardViewModel(
             getTopicUseCase = provideGetTopicUseCase(),
             getQuestionsUseCase = provideGetQuestionsUseCase(),
-            manageBookmarksUseCase = provideManageBookmarksUseCase()
+            manageBookmarksUseCase = provideManageBookmarksUseCase(),
+            manageProgressUseCase = provideManageProgressUseCase()
+        )
+    }
+
+    fun provideSplashViewModel(): SplashViewModel {
+        return SplashViewModel(
+            manageAuthUseCase = provideManageAuthUseCase()
+        )
+    }
+
+    fun provideLoginViewModel(): LoginViewModel {
+        return LoginViewModel(
+            manageAuthUseCase = provideManageAuthUseCase()
+        )
+    }
+
+    fun provideUserViewModel(): UserViewModel {
+        return UserViewModel(
+            manageAuthUseCase = provideManageAuthUseCase()
         )
     }
 

@@ -47,6 +47,7 @@ import com.shubham.mobiledevinterviewprep.presentation.component.BookmarkFilledI
 import com.shubham.mobiledevinterviewprep.presentation.component.BookmarkOutlineIcon
 import com.shubham.mobiledevinterviewprep.presentation.component.ErrorScreen
 import com.shubham.mobiledevinterviewprep.presentation.component.LoadingScreen
+import com.shubham.mobiledevinterviewprep.presentation.component.MenuIcon
 import com.shubham.mobiledevinterviewprep.presentation.component.SearchIcon
 import com.shubham.mobiledevinterviewprep.presentation.component.TopicCard
 import com.shubham.mobiledevinterviewprep.presentation.viewmodel.HomeUiState
@@ -65,7 +66,8 @@ fun HomeScreen(
     viewModel: HomeViewModel,
     onTopicClick: (String) -> Unit,
     onSearchClick: () -> Unit,
-    onBookmarksClick: () -> Unit
+    onBookmarksClick: () -> Unit,
+    onUserClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
@@ -89,6 +91,15 @@ fun HomeScreen(
             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
                 LargeTopAppBar(
+                    navigationIcon = {
+                        IconButton(onClick = onUserClick) {
+                            Icon(
+                                imageVector = MenuIcon,
+                                contentDescription = "User",
+                                tint = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    },
                     title = {
                         Column {
                             Text(
@@ -156,6 +167,7 @@ fun HomeScreen(
                 is HomeUiState.Success -> {
                     HomeContent(
                         topicsByCategory = state.topicsByCategory,
+                        coveredCountByTopic = state.coveredCountByTopic,
                         onTopicClick = onTopicClick,
                         modifier = Modifier.padding(paddingValues)
                     )
@@ -169,6 +181,7 @@ fun HomeScreen(
 private fun HomeContent(
     topicsByCategory: Map<TopicCategory, List<Topic>>,
     onTopicClick: (String) -> Unit,
+    coveredCountByTopic: Map<String, Int>,
     modifier: Modifier = Modifier
 ) {
     LazyVerticalGrid(
@@ -193,9 +206,13 @@ private fun HomeContent(
                     items = topics,
                     key = { it.id }
                 ) { topic ->
+                    val coveredCount = coveredCountByTopic[topic.id] ?: 0
                     TopicCard(
                         topic = topic,
                         onClick = { onTopicClick(topic.id) }
+                        ,
+                        coveredCount = coveredCount,
+                        totalCount = topic.questionCount
                     )
                 }
                 

@@ -227,3 +227,33 @@ val PlayIcon: ImageVector
             close()
         }
     }.build()
+
+val MenuIcon: ImageVector
+    get() = ImageVector.Builder(
+        name = "Menu",
+        defaultWidth = 24.dp,
+        defaultHeight = 24.dp,
+        viewportWidth = 24f,
+        viewportHeight = 24f
+    ).apply {
+        path(
+            fill = SolidColor(Color.Black),
+            pathFillType = PathFillType.NonZero
+        ) {
+            moveTo(3f, 6f)
+            horizontalLineTo(21f)
+            verticalLineTo(8f)
+            horizontalLineTo(3f)
+            close()
+            moveTo(3f, 11f)
+            horizontalLineTo(21f)
+            verticalLineTo(13f)
+            horizontalLineTo(3f)
+            close()
+            moveTo(3f, 16f)
+            horizontalLineTo(21f)
+            verticalLineTo(18f)
+            horizontalLineTo(3f)
+            close()
+        }
+    }.build()

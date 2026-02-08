@@ -36,6 +36,10 @@ class QuestionRepositoryImpl : QuestionRepository {
         emit(SampleData.questions.filter { it.id in questionIdSet })
     }
 
+    override fun getAllQuestions(): Flow<List<Question>> = flow {
+        emit(SampleData.questions)
+    }
+
     override fun searchQuestions(query: String): Flow<List<Question>> = flow {
         emit(SampleData.searchQuestions(query))
     }
