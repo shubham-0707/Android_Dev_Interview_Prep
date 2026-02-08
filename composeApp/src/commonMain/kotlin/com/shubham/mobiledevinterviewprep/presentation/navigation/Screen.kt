@@ -12,6 +12,18 @@ import kotlinx.serialization.Serializable
 sealed interface Screen {
     
     /**
+     * Splash screen shown on app start.
+     */
+    @Serializable
+    data object Splash : Screen
+    
+    /**
+     * Login screen for authentication.
+     */
+    @Serializable
+    data object Login : Screen
+    
+    /**
      * Home screen showing list of topics grouped by category.
      */
     @Serializable
@@ -50,4 +62,10 @@ sealed interface Screen {
      */
     @Serializable
     data object Search : Screen
+    
+    /**
+     * User profile screen.
+     */
+    @Serializable
+    data object User : Screen
 }

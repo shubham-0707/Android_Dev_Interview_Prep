@@ -1,12 +1,6 @@
 package com.shubham.mobiledevinterviewprep
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.material3.Surface
@@ -25,8 +19,11 @@ import com.shubham.mobiledevinterviewprep.presentation.navigation.Screen
 import com.shubham.mobiledevinterviewprep.presentation.screen.BookmarksScreen
 import com.shubham.mobiledevinterviewprep.presentation.screen.FlashcardScreen
 import com.shubham.mobiledevinterviewprep.presentation.screen.HomeScreen
+import com.shubham.mobiledevinterviewprep.presentation.screen.LoginScreen
 import com.shubham.mobiledevinterviewprep.presentation.screen.SearchScreen
+import com.shubham.mobiledevinterviewprep.presentation.screen.SplashScreen
 import com.shubham.mobiledevinterviewprep.presentation.screen.TopicScreen
+import com.shubham.mobiledevinterviewprep.presentation.screen.UserScreen
 import com.shubham.mobiledevinterviewprep.presentation.theme.InterviewPrepTheme
 
 /**
@@ -54,24 +51,45 @@ fun App() {
             val navBackStackEntry by navController.currentBackStackEntryAsState()
             val currentRoute = navBackStackEntry?.destination?.route ?: "home"
 
-            AnimatedContent(
+            Crossfade(
                 targetState = currentRoute,
-                transitionSpec = {
-                    val slideSpec = tween<IntOffset>(durationMillis = 280)
-                    val fadeInSpec = tween<Float>(durationMillis = 220)
-                    val fadeOutSpec = tween<Float>(durationMillis = 180)
-                    (slideInHorizontally(animationSpec = slideSpec, initialOffsetX = { it / 6 }) + fadeIn(
-                        animationSpec = fadeInSpec
-                    )) togetherWith (slideOutHorizontally(animationSpec = slideSpec, targetOffsetX = { -it / 6 }) + fadeOut(
-                        animationSpec = fadeOutSpec
-                    ))
-                },
                 label = "screen_transition"
             ) {
                 NavHost(
                     navController = navController,
-                    startDestination = Screen.Home
+                    startDestination = Screen.Splash
                 ) {
+                    // Splash Screen
+                    composable<Screen.Splash> {
+                        val viewModel = remember { AppModule.provideSplashViewModel() }
+                        SplashScreen(
+                            viewModel = viewModel,
+                            onNavigateToLogin = {
+                                navController.navigate(Screen.Login) {
+                                    popUpTo(Screen.Splash) { inclusive = true }
+                                }
+                            },
+                            onNavigateToHome = {
+                                navController.navigate(Screen.Home) {
+                                    popUpTo(Screen.Splash) { inclusive = true }
+                                }
+                            }
+                        )
+                    }
+                    
+                    // Login Screen
+                    composable<Screen.Login> {
+                        val viewModel = remember { AppModule.provideLoginViewModel() }
+                        LoginScreen(
+                            viewModel = viewModel,
+                            onLoginSuccess = {
+                                navController.navigate(Screen.Home) {
+                                    popUpTo(Screen.Login) { inclusive = true }
+                                }
+                            }
+                        )
+                    }
+
                     // Home Screen
                     composable<Screen.Home> {
                         val viewModel = remember { AppModule.provideHomeViewModel() }
@@ -85,6 +103,9 @@ fun App() {
                             },
                             onBookmarksClick = {
                                 navController.navigate(Screen.Bookmarks)
+                            },
+                            onUserClick = {
+                                navController.navigate(Screen.User)
                             }
                         )
                     }
@@ -175,6 +196,20 @@ fun App() {
                                         questionId = question.id // Navigate directly to the searched question
                                     )
                                 )
+                            }
+                        )
+                    }
+                    
+                    // User Screen
+                    composable<Screen.User> {
+                        val viewModel = remember { AppModule.provideUserViewModel() }
+                        UserScreen(
+                            viewModel = viewModel,
+                            onBackClick = { navController.popBackStack() },
+                            onLoggedOut = {
+                                navController.navigate(Screen.Login) {
+                                    popUpTo(Screen.Home) { inclusive = true }
+                                }
                             }
                         )
                     }

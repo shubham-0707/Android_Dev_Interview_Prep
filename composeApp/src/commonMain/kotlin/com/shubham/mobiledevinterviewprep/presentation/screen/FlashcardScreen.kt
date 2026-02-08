@@ -1,12 +1,12 @@
 package com.shubham.mobiledevinterviewprep.presentation.screen
 
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
@@ -198,6 +198,78 @@ fun FlashcardScreen(
                         onCardClick = { viewModel.toggleAnswer() },
                         modifier = Modifier.padding(paddingValues)
                     )
+                }
+            }
+        }
+
+        // Celebration overlay when topic completes
+        val successState = uiState as? FlashcardUiState.Success
+        if (successState?.showCelebration == true) {
+            CelebrationOverlay(
+                onDismiss = { viewModel.dismissCelebration() }
+            )
+        }
+    }
+}
+
+@Composable
+private fun CelebrationOverlay(
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var visible by remember { androidx.compose.runtime.mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        visible = true
+        kotlinx.coroutines.delay(2000)
+        visible = false
+        kotlinx.coroutines.delay(260)
+        onDismiss()
+    }
+
+    Box(modifier = modifier.fillMaxSize()) {
+        AnimatedVisibility(
+            visible = visible,
+            enter = slideInVertically(
+                animationSpec = tween(360),
+                initialOffsetY = { it }
+            ) + fadeIn(animationSpec = tween(240)),
+            exit = slideOutVertically(
+                animationSpec = tween(260),
+                targetOffsetY = { it }
+            ) + fadeOut(animationSpec = tween(180)),
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(horizontal = 16.dp, vertical = 24.dp)
+        ) {
+            Surface(
+                shape = RoundedCornerShape(20.dp),
+                color = MaterialTheme.colorScheme.secondaryContainer,
+                shadowElevation = 8.dp,
+                tonalElevation = 2.dp
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 18.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "🎉",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text(
+                            text = "Topic Completed!",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                        Text(
+                            text = "Great job! Keep going.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
+                        )
+                    }
                 }
             }
         }

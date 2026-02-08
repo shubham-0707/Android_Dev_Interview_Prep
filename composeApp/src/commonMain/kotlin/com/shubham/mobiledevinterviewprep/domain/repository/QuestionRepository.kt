@@ -37,6 +37,12 @@ interface QuestionRepository {
      * @param questionIds List of question IDs to retrieve
      */
     fun getQuestionsByIds(questionIds: List<String>): Flow<List<Question>>
+
+    /**
+     * Returns all questions.
+     * Used for progress aggregation across topics.
+     */
+    fun getAllQuestions(): Flow<List<Question>>
     
     /**
      * Searches questions by query string.

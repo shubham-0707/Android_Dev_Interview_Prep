@@ -7,6 +7,7 @@ import com.shubham.mobiledevinterviewprep.domain.model.Topic
 import com.shubham.mobiledevinterviewprep.domain.usecase.GetQuestionsUseCase
 import com.shubham.mobiledevinterviewprep.domain.usecase.GetTopicUseCase
 import com.shubham.mobiledevinterviewprep.domain.usecase.ManageBookmarksUseCase
+import com.shubham.mobiledevinterviewprep.domain.usecase.ManageProgressUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,7 +23,8 @@ sealed class TopicUiState {
     data class Success(
         val topic: Topic,
         val questions: List<Question>,
-        val bookmarkedIds: Set<String>
+        val bookmarkedIds: Set<String>,
+        val coveredCount: Int
     ) : TopicUiState()
     data class Error(val message: String) : TopicUiState()
 }
@@ -34,7 +36,8 @@ sealed class TopicUiState {
 class TopicViewModel(
     private val getTopicUseCase: GetTopicUseCase,
     private val getQuestionsUseCase: GetQuestionsUseCase,
-    private val manageBookmarksUseCase: ManageBookmarksUseCase
+    private val manageBookmarksUseCase: ManageBookmarksUseCase,
+    private val manageProgressUseCase: ManageProgressUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<TopicUiState>(TopicUiState.Loading)
@@ -53,13 +56,16 @@ class TopicViewModel(
             combine(
                 getTopicUseCase(topicId),
                 getQuestionsUseCase(topicId),
-                manageBookmarksUseCase.getBookmarkedIds()
-            ) { topic, questions, bookmarkedIds ->
+                manageBookmarksUseCase.getBookmarkedIds(),
+                manageProgressUseCase.getCoveredIds()
+            ) { topic, questions, bookmarkedIds, coveredIds ->
                 if (topic != null) {
+                    val coveredCount = questions.count { it.id in coveredIds }
                     TopicUiState.Success(
                         topic = topic,
                         questions = questions,
-                        bookmarkedIds = bookmarkedIds
+                        bookmarkedIds = bookmarkedIds,
+                        coveredCount = coveredCount
                     )
                 } else {
                     TopicUiState.Error("Topic not found")

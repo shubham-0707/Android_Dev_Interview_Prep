@@ -6,6 +6,7 @@ import com.shubham.mobiledevinterviewprep.domain.model.Topic
 import com.shubham.mobiledevinterviewprep.domain.model.TopicCategory
 import com.shubham.mobiledevinterviewprep.domain.usecase.GetTopicsUseCase
 import com.shubham.mobiledevinterviewprep.domain.usecase.ManageBookmarksUseCase
+import com.shubham.mobiledevinterviewprep.domain.usecase.ManageProgressUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,7 +22,8 @@ sealed class HomeUiState {
     data object Loading : HomeUiState()
     data class Success(
         val topicsByCategory: Map<TopicCategory, List<Topic>>,
-        val bookmarkCount: Int
+        val bookmarkCount: Int,
+        val coveredCountByTopic: Map<String, Int>
     ) : HomeUiState()
     data class Error(val message: String) : HomeUiState()
 }
@@ -35,7 +37,8 @@ sealed class HomeUiState {
  */
 class HomeViewModel(
     private val getTopicsUseCase: GetTopicsUseCase,
-    private val manageBookmarksUseCase: ManageBookmarksUseCase
+    private val manageBookmarksUseCase: ManageBookmarksUseCase,
+    private val manageProgressUseCase: ManageProgressUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
@@ -52,11 +55,13 @@ class HomeViewModel(
         viewModelScope.launch {
             combine(
                 getTopicsUseCase.groupedByCategory(),
-                manageBookmarksUseCase.getBookmarkCount()
-            ) { topics, bookmarkCount ->
+                manageBookmarksUseCase.getBookmarkCount(),
+                manageProgressUseCase.getCoveredCountByTopic()
+            ) { topics, bookmarkCount, coveredCountByTopic ->
                 HomeUiState.Success(
                     topicsByCategory = topics,
-                    bookmarkCount = bookmarkCount
+                    bookmarkCount = bookmarkCount,
+                    coveredCountByTopic = coveredCountByTopic
                 )
             }
             .catch { e ->
