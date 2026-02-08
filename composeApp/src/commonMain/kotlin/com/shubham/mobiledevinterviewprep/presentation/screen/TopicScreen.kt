@@ -1,6 +1,8 @@
 package com.shubham.mobiledevinterviewprep.presentation.screen
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -27,6 +29,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.shubham.mobiledevinterviewprep.domain.model.Question
@@ -57,53 +61,67 @@ fun TopicScreen(
         viewModel.loadTopic(topicId)
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    when (val state = uiState) {
-                        is TopicUiState.Success -> {
-                            Text(
-                                text = state.topic.name,
-                                fontWeight = FontWeight.Bold
+    val backgroundBrush = Brush.verticalGradient(
+        colors = listOf(
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.06f),
+            MaterialTheme.colorScheme.background,
+            MaterialTheme.colorScheme.background
+        )
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(backgroundBrush)
+    ) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = {
+                        when (val state = uiState) {
+                            is TopicUiState.Success -> {
+                                Text(
+                                    text = state.topic.name,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                            else -> {
+                                Text(text = "Topic")
+                            }
+                        }
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = onBackClick) {
+                            Icon(
+                                imageVector = ArrowBackIcon,
+                                contentDescription = "Back"
                             )
                         }
-                        else -> {
-                            Text(text = "Topic")
-                        }
-                    }
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(
-                            imageVector = ArrowBackIcon,
-                            contentDescription = "Back"
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f)
+                    )
                 )
-            )
-        },
-        containerColor = MaterialTheme.colorScheme.background
-    ) { paddingValues ->
-        when (val state = uiState) {
-            is TopicUiState.Loading -> {
-                LoadingScreen(message = "Loading questions...")
-            }
-            is TopicUiState.Error -> {
-                ErrorScreen(message = state.message)
-            }
-            is TopicUiState.Success -> {
-                TopicContent(
-                    questions = state.questions,
-                    bookmarkedIds = state.bookmarkedIds,
-                    onQuestionClick = onQuestionClick,
-                    onBookmarkClick = { viewModel.toggleBookmark(it) },
-                    onStartFlashcards = onStartFlashcards,
-                    modifier = Modifier.padding(paddingValues)
-                )
+            },
+            containerColor = Color.Transparent
+        ) { paddingValues ->
+            when (val state = uiState) {
+                is TopicUiState.Loading -> {
+                    LoadingScreen(message = "Loading questions...")
+                }
+                is TopicUiState.Error -> {
+                    ErrorScreen(message = state.message)
+                }
+                is TopicUiState.Success -> {
+                    TopicContent(
+                        questions = state.questions,
+                        bookmarkedIds = state.bookmarkedIds,
+                        onQuestionClick = onQuestionClick,
+                        onBookmarkClick = { viewModel.toggleBookmark(it) },
+                        onStartFlashcards = onStartFlashcards,
+                        modifier = Modifier.padding(paddingValues)
+                    )
+                }
             }
         }
     }
@@ -166,11 +184,12 @@ private fun StartFlashcardsButton(
     Button(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.primary
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
         ),
-        contentPadding = PaddingValues(16.dp)
+        contentPadding = PaddingValues(vertical = 16.dp, horizontal = 20.dp)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically

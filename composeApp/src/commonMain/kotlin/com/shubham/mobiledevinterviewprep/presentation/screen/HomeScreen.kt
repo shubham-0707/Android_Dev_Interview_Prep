@@ -14,8 +14,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
@@ -34,6 +36,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -68,80 +72,94 @@ fun HomeScreen(
         rememberTopAppBarState()
     )
 
-    Scaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-        topBar = {
-            LargeTopAppBar(
-                title = {
-                    Column {
-                        Text(
-                            text = "Interview Prep",
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = "Master your next interview",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(onClick = onSearchClick) {
-                        Icon(
-                            imageVector = SearchIcon,
-                            contentDescription = "Search questions",
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                    
-                    val bookmarkCount = (uiState as? HomeUiState.Success)?.bookmarkCount ?: 0
-                    IconButton(onClick = onBookmarksClick) {
-                        if (bookmarkCount > 0) {
-                            BadgedBox(
-                                badge = {
-                                    Badge {
-                                        Text(bookmarkCount.toString())
-                                    }
-                                }
-                            ) {
-                                Icon(
-                                    imageVector = BookmarkFilledIcon,
-                                    contentDescription = "Bookmarks ($bookmarkCount)",
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                        } else {
+    val backgroundBrush = Brush.verticalGradient(
+        colors = listOf(
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
+            MaterialTheme.colorScheme.background,
+            MaterialTheme.colorScheme.background
+        )
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(backgroundBrush)
+    ) {
+        Scaffold(
+            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+            topBar = {
+                LargeTopAppBar(
+                    title = {
+                        Column {
+                            Text(
+                                text = "Interview Prep",
+                                style = MaterialTheme.typography.headlineMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "Master your next interview",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = onSearchClick) {
                             Icon(
-                                imageVector = BookmarkOutlineIcon,
-                                contentDescription = "Bookmarks",
+                                imageVector = SearchIcon,
+                                contentDescription = "Search questions",
                                 tint = MaterialTheme.colorScheme.onSurface
                             )
                         }
-                    }
-                },
-                scrollBehavior = scrollBehavior,
-                colors = TopAppBarDefaults.largeTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    scrolledContainerColor = MaterialTheme.colorScheme.surface
+                        
+                        val bookmarkCount = (uiState as? HomeUiState.Success)?.bookmarkCount ?: 0
+                        IconButton(onClick = onBookmarksClick) {
+                            if (bookmarkCount > 0) {
+                                BadgedBox(
+                                    badge = {
+                                        Badge {
+                                            Text(bookmarkCount.toString())
+                                        }
+                                    }
+                                ) {
+                                    Icon(
+                                        imageVector = BookmarkFilledIcon,
+                                        contentDescription = "Bookmarks ($bookmarkCount)",
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            } else {
+                                Icon(
+                                    imageVector = BookmarkOutlineIcon,
+                                    contentDescription = "Bookmarks",
+                                    tint = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
+                    },
+                    scrollBehavior = scrollBehavior,
+                    colors = TopAppBarDefaults.largeTopAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f),
+                        scrolledContainerColor = MaterialTheme.colorScheme.surface
+                    )
                 )
-            )
-        },
-        containerColor = MaterialTheme.colorScheme.background
-    ) { paddingValues ->
-        when (val state = uiState) {
-            is HomeUiState.Loading -> {
-                LoadingScreen(message = "Loading topics...")
-            }
-            is HomeUiState.Error -> {
-                ErrorScreen(message = state.message)
-            }
-            is HomeUiState.Success -> {
-                HomeContent(
-                    topicsByCategory = state.topicsByCategory,
-                    onTopicClick = onTopicClick,
-                    modifier = Modifier.padding(paddingValues)
-                )
+            },
+            containerColor = Color.Transparent
+        ) { paddingValues ->
+            when (val state = uiState) {
+                is HomeUiState.Loading -> {
+                    LoadingScreen(message = "Loading topics...")
+                }
+                is HomeUiState.Error -> {
+                    ErrorScreen(message = state.message)
+                }
+                is HomeUiState.Success -> {
+                    HomeContent(
+                        topicsByCategory = state.topicsByCategory,
+                        onTopicClick = onTopicClick,
+                        modifier = Modifier.padding(paddingValues)
+                    )
+                }
             }
         }
     }
@@ -153,16 +171,21 @@ private fun HomeContent(
     onTopicClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    LazyColumn(
+    LazyVerticalGrid(
         modifier = modifier.fillMaxSize(),
+        columns = GridCells.Adaptive(minSize = 160.dp),
         contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // Iterate through categories in defined order
         TopicCategory.entries.forEach { category ->
             val topics = topicsByCategory[category] ?: emptyList()
             if (topics.isNotEmpty()) {
-                item(key = "header_${category.name}") {
+                item(
+                    key = "header_${category.name}",
+                    span = { GridItemSpan(maxLineSpan) }
+                ) {
                     CategoryHeader(category = category)
                 }
                 
@@ -176,7 +199,10 @@ private fun HomeContent(
                     )
                 }
                 
-                item(key = "spacer_${category.name}") {
+                item(
+                    key = "spacer_${category.name}",
+                    span = { GridItemSpan(maxLineSpan) }
+                ) {
                     Spacer(modifier = Modifier.height(8.dp))
                 }
             }

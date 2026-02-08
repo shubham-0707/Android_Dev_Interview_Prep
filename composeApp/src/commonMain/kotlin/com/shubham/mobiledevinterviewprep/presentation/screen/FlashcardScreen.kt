@@ -47,6 +47,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
@@ -99,90 +101,104 @@ fun FlashcardScreen(
         }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    when (val state = uiState) {
-                        is FlashcardUiState.Success -> {
-                            Column {
-                                Text(
-                                    text = if (bookmarksOnly) "Bookmarked" else state.topic?.name ?: "Flashcards",
-                                    fontWeight = FontWeight.Bold,
-                                    style = MaterialTheme.typography.titleMedium
-                                )
-                                Text(
-                                    text = state.progressText,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+    val backgroundBrush = Brush.verticalGradient(
+        colors = listOf(
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.06f),
+            MaterialTheme.colorScheme.background,
+            MaterialTheme.colorScheme.background
+        )
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(backgroundBrush)
+    ) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = {
+                        when (val state = uiState) {
+                            is FlashcardUiState.Success -> {
+                                Column {
+                                    Text(
+                                        text = if (bookmarksOnly) "Bookmarked" else state.topic?.name ?: "Flashcards",
+                                        fontWeight = FontWeight.Bold,
+                                        style = MaterialTheme.typography.titleMedium
+                                    )
+                                    Text(
+                                        text = state.progressText,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                            else -> {
+                                Text(text = "Flashcards")
+                            }
+                        }
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = onBackClick) {
+                            Icon(
+                                imageVector = ArrowBackIcon,
+                                contentDescription = "Back"
+                            )
+                        }
+                    },
+                    actions = {
+                        val state = uiState
+                        if (state is FlashcardUiState.Success) {
+                            IconButton(onClick = { viewModel.toggleCurrentBookmark() }) {
+                                Icon(
+                                    imageVector = if (state.isCurrentBookmarked) {
+                                        BookmarkFilledIcon
+                                    } else {
+                                        BookmarkOutlineIcon
+                                    },
+                                    contentDescription = "Toggle bookmark",
+                                    tint = if (state.isCurrentBookmarked) {
+                                        MaterialTheme.colorScheme.primary
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurfaceVariant
+                                    }
                                 )
                             }
                         }
-                        else -> {
-                            Text(text = "Flashcards")
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f)
+                    )
+                )
+            },
+            containerColor = Color.Transparent
+        ) { paddingValues ->
+            when (val state = uiState) {
+                is FlashcardUiState.Loading -> {
+                    LoadingScreen(message = "Loading flashcards...")
+                }
+                is FlashcardUiState.Error -> {
+                    ErrorScreen(message = state.message)
+                }
+                is FlashcardUiState.Empty -> {
+                    EmptyScreen(
+                        title = "No Questions",
+                        message = if (bookmarksOnly) {
+                            "You haven't bookmarked any questions yet."
+                        } else {
+                            "No questions available for this topic."
                         }
-                    }
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(
-                            imageVector = ArrowBackIcon,
-                            contentDescription = "Back"
-                        )
-                    }
-                },
-                actions = {
-                    val state = uiState
-                    if (state is FlashcardUiState.Success) {
-                        IconButton(onClick = { viewModel.toggleCurrentBookmark() }) {
-                            Icon(
-                                imageVector = if (state.isCurrentBookmarked) {
-                                    BookmarkFilledIcon
-                                } else {
-                                    BookmarkOutlineIcon
-                                },
-                                contentDescription = "Toggle bookmark",
-                                tint = if (state.isCurrentBookmarked) {
-                                    MaterialTheme.colorScheme.primary
-                                } else {
-                                    MaterialTheme.colorScheme.onSurfaceVariant
-                                }
-                            )
-                        }
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
-                )
-            )
-        },
-        containerColor = MaterialTheme.colorScheme.background
-    ) { paddingValues ->
-        when (val state = uiState) {
-            is FlashcardUiState.Loading -> {
-                LoadingScreen(message = "Loading flashcards...")
-            }
-            is FlashcardUiState.Error -> {
-                ErrorScreen(message = state.message)
-            }
-            is FlashcardUiState.Empty -> {
-                EmptyScreen(
-                    title = "No Questions",
-                    message = if (bookmarksOnly) {
-                        "You haven't bookmarked any questions yet."
-                    } else {
-                        "No questions available for this topic."
-                    }
-                )
-            }
-            is FlashcardUiState.Success -> {
-                FlashcardContent(
-                    state = state,
-                    onSwipeLeft = { viewModel.nextCard() },
-                    onSwipeRight = { viewModel.previousCard() },
-                    onCardClick = { viewModel.toggleAnswer() },
-                    modifier = Modifier.padding(paddingValues)
-                )
+                    )
+                }
+                is FlashcardUiState.Success -> {
+                    FlashcardContent(
+                        state = state,
+                        onSwipeLeft = { viewModel.nextCard() },
+                        onSwipeRight = { viewModel.previousCard() },
+                        onCardClick = { viewModel.toggleAnswer() },
+                        modifier = Modifier.padding(paddingValues)
+                    )
+                }
             }
         }
     }
@@ -316,10 +332,14 @@ private fun FlashcardCard(
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.98f)
+        ),
+        border = androidx.compose.foundation.BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.28f)
         ),
         elevation = CardDefaults.cardElevation(
-            defaultElevation = 8.dp
+            defaultElevation = 10.dp
         )
     ) {
         Column(

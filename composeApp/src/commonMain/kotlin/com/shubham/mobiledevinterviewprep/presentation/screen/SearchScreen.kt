@@ -1,6 +1,8 @@
 package com.shubham.mobiledevinterviewprep.presentation.screen
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -29,6 +31,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -64,110 +68,124 @@ fun SearchScreen(
         focusRequester.requestFocus()
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Search",
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(
-                            imageVector = ArrowBackIcon,
-                            contentDescription = "Back"
+    val backgroundBrush = Brush.verticalGradient(
+        colors = listOf(
+            MaterialTheme.colorScheme.tertiary.copy(alpha = 0.06f),
+            MaterialTheme.colorScheme.background,
+            MaterialTheme.colorScheme.background
+        )
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(backgroundBrush)
+    ) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = "Search",
+                            fontWeight = FontWeight.Bold
                         )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
-                )
-            )
-        },
-        containerColor = MaterialTheme.colorScheme.background
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            // Search field
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { viewModel.updateQuery(it) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-                    .focusRequester(focusRequester),
-                placeholder = {
-                    Text(text = "Search questions, answers, or tags...")
-                },
-                leadingIcon = {
-                    Icon(
-                        imageVector = SearchIcon,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                },
-                trailingIcon = {
-                    if (searchQuery.isNotEmpty()) {
-                        IconButton(onClick = { viewModel.clearSearch() }) {
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = onBackClick) {
                             Icon(
-                                imageVector = CloseIcon,
-                                contentDescription = "Clear search",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                imageVector = ArrowBackIcon,
+                                contentDescription = "Back"
                             )
                         }
-                    }
-                },
-                singleLine = true,
-                shape = RoundedCornerShape(16.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
-                    focusedContainerColor = MaterialTheme.colorScheme.surface,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surface
-                ),
-                keyboardOptions = KeyboardOptions(
-                    imeAction = ImeAction.Search
-                ),
-                keyboardActions = KeyboardActions(
-                    onSearch = {
-                        keyboardController?.hide()
-                    }
-                )
-            )
-
-            // Search results
-            when (val state = uiState) {
-                is SearchUiState.Idle -> {
-                    EmptyScreen(
-                        title = "Search Questions",
-                        message = "Type to search across all topics"
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f)
                     )
-                }
-                is SearchUiState.Loading -> {
-                    LoadingScreen(message = "Searching...")
-                }
-                is SearchUiState.Error -> {
-                    ErrorScreen(message = state.message)
-                }
-                is SearchUiState.Success -> {
-                    if (state.isEmpty) {
+                )
+            },
+            containerColor = Color.Transparent
+        ) { paddingValues ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+            ) {
+                // Search field
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { viewModel.updateQuery(it) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .focusRequester(focusRequester),
+                    placeholder = {
+                        Text(text = "Search questions, answers, or tags...")
+                    },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = SearchIcon,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
+                    trailingIcon = {
+                        if (searchQuery.isNotEmpty()) {
+                            IconButton(onClick = { viewModel.clearSearch() }) {
+                                Icon(
+                                    imageVector = CloseIcon,
+                                    contentDescription = "Clear search",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    },
+                    singleLine = true,
+                    shape = RoundedCornerShape(18.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                        focusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.96f),
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.96f)
+                    ),
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Search
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onSearch = {
+                            keyboardController?.hide()
+                        }
+                    )
+                )
+
+                // Search results
+                when (val state = uiState) {
+                    is SearchUiState.Idle -> {
                         EmptyScreen(
-                            title = "No Results",
-                            message = "No questions found for \"${state.query}\""
+                            title = "Search Questions",
+                            message = "Type to search across all topics"
                         )
-                    } else {
-                        SearchResults(
-                            query = state.query,
-                            results = state.results,
-                            bookmarkedIds = state.bookmarkedIds,
-                            onQuestionClick = onQuestionClick,
-                            onBookmarkClick = { viewModel.toggleBookmark(it) }
-                        )
+                    }
+                    is SearchUiState.Loading -> {
+                        LoadingScreen(message = "Searching...")
+                    }
+                    is SearchUiState.Error -> {
+                        ErrorScreen(message = state.message)
+                    }
+                    is SearchUiState.Success -> {
+                        if (state.isEmpty) {
+                            EmptyScreen(
+                                title = "No Results",
+                                message = "No questions found for \"${state.query}\""
+                            )
+                        } else {
+                            SearchResults(
+                                query = state.query,
+                                results = state.results,
+                                bookmarkedIds = state.bookmarkedIds,
+                                onQuestionClick = onQuestionClick,
+                                onBookmarkClick = { viewModel.toggleBookmark(it) }
+                            )
+                        }
                     }
                 }
             }

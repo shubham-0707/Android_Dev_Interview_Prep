@@ -1,6 +1,8 @@
 package com.shubham.mobiledevinterviewprep.presentation.screen
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -26,6 +28,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.shubham.mobiledevinterviewprep.domain.model.Question
@@ -51,51 +55,65 @@ fun BookmarksScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Bookmarks",
-                        fontWeight = FontWeight.Bold
+    val backgroundBrush = Brush.verticalGradient(
+        colors = listOf(
+            MaterialTheme.colorScheme.secondary.copy(alpha = 0.06f),
+            MaterialTheme.colorScheme.background,
+            MaterialTheme.colorScheme.background
+        )
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(backgroundBrush)
+    ) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = "Bookmarks",
+                            fontWeight = FontWeight.Bold
+                        )
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = onBackClick) {
+                            Icon(
+                                imageVector = ArrowBackIcon,
+                                contentDescription = "Back"
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f)
                     )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(
-                            imageVector = ArrowBackIcon,
-                            contentDescription = "Back"
+                )
+            },
+            containerColor = Color.Transparent
+        ) { paddingValues ->
+            when (val state = uiState) {
+                is BookmarkUiState.Loading -> {
+                    LoadingScreen(message = "Loading bookmarks...")
+                }
+                is BookmarkUiState.Error -> {
+                    ErrorScreen(message = state.message)
+                }
+                is BookmarkUiState.Success -> {
+                    if (state.isEmpty) {
+                        EmptyScreen(
+                            title = "No Bookmarks",
+                            message = "Questions you bookmark will appear here."
+                        )
+                    } else {
+                        BookmarksContent(
+                            questions = state.questions,
+                            onQuestionClick = onQuestionClick,
+                            onBookmarkClick = { viewModel.removeBookmark(it) },
+                            onStartFlashcards = onStartFlashcards,
+                            modifier = Modifier.padding(paddingValues)
                         )
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
-                )
-            )
-        },
-        containerColor = MaterialTheme.colorScheme.background
-    ) { paddingValues ->
-        when (val state = uiState) {
-            is BookmarkUiState.Loading -> {
-                LoadingScreen(message = "Loading bookmarks...")
-            }
-            is BookmarkUiState.Error -> {
-                ErrorScreen(message = state.message)
-            }
-            is BookmarkUiState.Success -> {
-                if (state.isEmpty) {
-                    EmptyScreen(
-                        title = "No Bookmarks",
-                        message = "Questions you bookmark will appear here."
-                    )
-                } else {
-                    BookmarksContent(
-                        questions = state.questions,
-                        onQuestionClick = onQuestionClick,
-                        onBookmarkClick = { viewModel.removeBookmark(it) },
-                        onStartFlashcards = onStartFlashcards,
-                        modifier = Modifier.padding(paddingValues)
-                    )
                 }
             }
         }
@@ -120,11 +138,12 @@ private fun BookmarksContent(
             Button(
                 onClick = onStartFlashcards,
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(20.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 ),
-                contentPadding = PaddingValues(16.dp)
+                contentPadding = PaddingValues(vertical = 16.dp, horizontal = 20.dp)
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically
